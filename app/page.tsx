@@ -23,7 +23,17 @@ interface Conversation {
   turns: Turn[];
 }
 
-const HISTORY_KEY = "ai-fiesta-prototype:conversations:v1";
+const HISTORY_KEY = "fusionai:conversations:v1";
+
+const EXAMPLE_PROMPT =
+  "Explain black holes in plain language, with one everyday analogy.";
+
+const PROVIDER_LABELS: Record<string, string> = {
+  gemini: "Google",
+  groq: "Groq",
+  openrouter: "OpenRouter",
+  mistral: "Mistral",
+};
 
 function loadHistory(): Conversation[] {
   try {
@@ -52,6 +62,7 @@ export default function Home() {
   const [sessionKey, setSessionKey] = useState(0);
 
   const columnApis = useRef(new Map<string, ColumnApi>());
+  const inputRef = useRef<HTMLTextAreaElement>(null);
 
   // Tracks currentId for use inside callbacks (avoids stale closures).
   const currentIdRef = useRef<string | null>(null);
@@ -178,10 +189,12 @@ export default function Home() {
   return (
     <div className="app">
       <header className="app-header">
-        <h1>AI Fiesta Prototype</h1>
-        <p>
-          Ask once, compare answers from free-tier AI models side by side.
-          Pick up to {MAX_MODELS_PER_PROMPT} models.
+        <div className="brand-row">
+          <h1>FusionAI</h1>
+          <span className="free-badge">Free tier · No card</span>
+        </div>
+        <p className="tagline">
+          Ask once, compare answers from free AI models side by side.
         </p>
       </header>
 
@@ -224,31 +237,52 @@ export default function Home() {
         </aside>
 
         <main className="main">
-          <section className="picker" aria-label="Choose models">
-            {MODELS.map((m) => {
-              const checked = selected.includes(m.id);
-              const disabled =
-                !checked && selected.length >= MAX_MODELS_PER_PROMPT;
-              return (
-                <label
-                  key={m.id}
-                  className={`model-card ${checked ? "checked" : ""} ${disabled ? "disabled" : ""}`}
-                >
-                  <input
-                    type="checkbox"
-                    checked={checked}
-                    disabled={disabled}
-                    onChange={() => toggleModel(m.id)}
-                  />
-                  <span className="model-label">{m.label}</span>
-                  <span className="model-note">{m.freeTierNote}</span>
-                </label>
-              );
-            })}
+          <section aria-label="Choose models">
+            <div className="picker-header">
+              <h2>Choose models</h2>
+              <span className="picker-count" aria-live="polite">
+                {selected.length} of {MAX_MODELS_PER_PROMPT} selected
+                {selected.length >= MAX_MODELS_PER_PROMPT
+                  ? " — max reached, unselect one to change"
+                  : ""}
+              </span>
+            </div>
+            <div className="picker">
+              {MODELS.map((m) => {
+                const checked = selected.includes(m.id);
+                const disabled =
+                  !checked && selected.length >= MAX_MODELS_PER_PROMPT;
+                return (
+                  <label
+                    key={m.id}
+                    className={`model-card ${checked ? "checked" : ""} ${disabled ? "disabled" : ""}`}
+                  >
+                    <input
+                      type="checkbox"
+                      checked={checked}
+                      disabled={disabled}
+                      onChange={() => toggleModel(m.id)}
+                    />
+                    <span
+                      className="model-check"
+                      aria-hidden="true"
+                    >
+                      {checked ? "✓" : ""}
+                    </span>
+                    <span className="model-label">{m.label}</span>
+                    <span className="model-provider">
+                      {PROVIDER_LABELS[m.provider]}
+                    </span>
+                    <span className="model-note">{m.freeTierNote}</span>
+                  </label>
+                );
+              })}
+            </div>
           </section>
 
           <form className="prompt-form" onSubmit={handleSubmit}>
             <textarea
+              ref={inputRef}
               value={input}
               onChange={(e) => setInput(e.target.value)}
               onKeyDown={(e) => {
@@ -270,6 +304,27 @@ export default function Home() {
               {anyStreaming ? "Waiting for replies…" : "Ask all models"}
             </button>
           </form>
+
+          {!viewing && currentId === null && (
+            <section className="empty-state" aria-label="Try an example">
+              <h2>Compare free AI models side by side</h2>
+              <p>
+                Pick up to {MAX_MODELS_PER_PROMPT} models above, ask one
+                question, and watch their answers stream in below.
+              </p>
+              <p className="empty-state-label">Try an example:</p>
+              <button
+                type="button"
+                className="example-prompt"
+                onClick={() => {
+                  setInput(EXAMPLE_PROMPT);
+                  inputRef.current?.focus();
+                }}
+              >
+                {EXAMPLE_PROMPT}
+              </button>
+            </section>
+          )}
 
           {viewing ? (
             <section className="history-view">
