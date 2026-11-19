@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useChat } from "@ai-sdk/react";
 import { DefaultChatTransport, type UIMessage } from "ai";
 import type { ModelEntry } from "@/lib/models";
@@ -89,6 +89,26 @@ export default function ChatColumn({
   const isRateLimited =
     !!error && /429|rate-limit|rate limit/i.test(error.message);
 
+  // Latest assistant reply, for the per-column Copy button.
+  const latestAssistant = [...messages]
+    .reverse()
+    .find((m) => m.role === "assistant");
+  const latestAssistantText = latestAssistant
+    ? messageText(latestAssistant)
+    : "";
+  const [copied, setCopied] = useState(false);
+
+  async function copyAnswer() {
+    if (!latestAssistantText) return;
+    try {
+      await navigator.clipboard.writeText(latestAssistantText);
+      setCopied(true);
+      window.setTimeout(() => setCopied(false), 2000);
+    } catch {
+      // Clipboard unavailable (e.g. insecure context) — stay silent.
+    }
+  }
+
   return (
     <section className="column" aria-label={model.label}>
       <header className="column-header">
@@ -139,16 +159,34 @@ export default function ChatColumn({
           <div className="error-box" role="alert">
             <strong>{isRateLimited ? "Rate-limited" : "Error"}</strong>
             <p>{error.message}</p>
-            <button type="button" onClick={() => void regenerate()}>
-              Retry this model
+            <button
+              type="button"
+              className="retry-button"
+              onClick={() => void regenerate()}
+            >
+              ↻ Retry this model
             </button>
           </div>
         )}
-        {isStreaming && (
-          <button type="button" className="stop-button" onClick={() => stop()}>
-            Stop
+        <div className="column-actions">
+          {isStreaming && (
+            <button
+              type="button"
+              className="stop-button"
+              onClick={() => stop()}
+            >
+              ■ Stop
+            </button>
+          )}
+          <button
+            type="button"
+            className="copy-button"
+            onClick={() => void copyAnswer()}
+            disabled={!latestAssistantText}
+          >
+            {copied ? "✓ Copied" : "Copy answer"}
           </button>
-        )}
+        </div>
         <p className="column-limit">{model.freeTierNote}</p>
       </footer>
     </section>
