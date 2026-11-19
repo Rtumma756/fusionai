@@ -1,4 +1,4 @@
-# AI Fiesta Prototype — Free Multi-Model Chat Companion
+# FusionAI — Free Multi-Model Chat Companion
 
 A minimal Next.js prototype in the style of [AI Fiesta](https://chat.aifiesta.ai/):
 pick up to 3 free AI models, send one prompt, and watch their answers stream
@@ -67,7 +67,7 @@ makes that model show a clear "API key not configured" error in its column.
 
 ## Deploy to Vercel (free Hobby plan)
 
-1. Push this folder to a GitHub repo (e.g. `Rtumma756/ai-fiesta-prototype`).
+1. Push this folder to a GitHub repo (e.g. `Rtumma756/fusionai`).
 2. In the [Vercel dashboard](https://vercel.com/dashboard) → **Add New →
    Project** → **Import** the repo.
 3. Framework preset: **Next.js** (auto-detected). Leave build settings as-is.
