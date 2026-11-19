@@ -50,8 +50,8 @@ function getClient(entry: ModelEntry): OpenAIProvider {
     headers:
       entry.provider === "openrouter"
         ? {
-            "HTTP-Referer": "https://ai-fiesta-prototype.vercel.app",
-            "X-Title": "AI Fiesta Prototype",
+            "HTTP-Referer": "https://fusionai.vercel.app",
+            "X-Title": "FusionAI",
           }
         : undefined,
   });
